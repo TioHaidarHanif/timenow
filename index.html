@@ -1,0 +1,249 @@
+<!-- from chatgpt -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jam, Timer, Stopwatch, Alarm</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #1b1b1b, #00ff7f);
+            color: #00ff7f;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            transition: background 0.5s;
+        }
+
+        .menu-container {
+            margin-top: 20px;
+        }
+
+        .nav-button {
+            background-color: #00ff7f;
+            color: #2a2a2a;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+            margin: 5px;
+        }
+
+        .nav-button:hover {
+            background-color: #2a2a2a;
+            color: #00ff7f;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #2a2a2a;
+            padding: 50px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+            margin-top: 20px;
+        }
+
+        .title {
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: bolder;
+        }
+
+        .clock, .timer, .stopwatch, .alarm {
+            font-weight: bold;
+            display: none;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+
+        .clock {
+            font-size: 4em;
+            padding: 20px;
+            /* border: 5px solid #00ff8077; */
+            border-radius: 15px;
+            /* box-shadow: 0 0 15px rgba(0, 255, 127, 0.7); */
+            
+        animation: glow 2s ease-in-out infinite alternate;
+        }
+    
+        @keyframes glow {
+  from {
+    text-shadow: 0 0 10px #00ff801a, 0 0 20px #00ff801a, 0 0 30px #00ff801a, 0 0 40px #00ff801a, 0 0 50px #00ff801a;
+  }
+  
+  50% {
+    text-shadow: 0 0 10px #2a2a2a, 0 0 20px #2a2a2a, 0 0 30px #2a2a2a, 0 0 40px #2a2a2a, 0 0 50px #2a2a2a;
+  }
+
+  to {
+    text-shadow: 0 0 10px #00ff801a, 0 0 20px #00ff801a, 0 0 30px #00ff801a, 0 0 40px #00ff801a, 0 0 50px #00ff801a;
+  }
+
+}
+.timer, .stopwatch, .alarm {
+    font-size: 2em;
+}
+
+        .reminder {
+            font-size: 1.2em;
+            color: #00ff7f;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <button class="nav-button" onclick="showSection('clock')">Jam</button>
+        <button class="nav-button" onclick="showSection('timer')">Timer</button>
+        <button class="nav-button" onclick="showSection('stopwatch')">Stopwatch</button>
+        <button class="nav-button" onclick="showSection('alarm')">Alarm</button>
+        <button class="nav-button" onclick="changeBackground()">Ubah Warna Latar</button>
+    </div>
+    <div class="container">
+        <div class="title">Gunakan Waktu Sebaik Mungkin</div>
+        <div id="clock" class="clock"></div>
+        <div id="timer" class="timer">
+            <input type="number" id="timer-minutes" placeholder="Menit" min="0">
+            <input type="number" id="timer-seconds" placeholder="Detik" min="0">
+            <button class="nav-button" onclick="startTimer()">Mulai Timer</button>
+            <button class="nav-button" onclick="resetTimer()">Reset Timer</button>
+            <div id="timer-display">00:00</div>
+        </div>
+        <div id="stopwatch" class="stopwatch">
+            <div id="stopwatch-display">00:00:00</div>
+            <button class="nav-button" onclick="startStopwatch()">Mulai</button>
+            <button class="nav-button" onclick="stopStopwatch()">Berhenti</button>
+            <button class="nav-button" onclick="resetStopwatch()">Reset</button>
+        </div>
+        <div id="alarm" class="alarm">
+            <input type="time" id="alarm-time">
+            <button class="nav-button" onclick="setAlarm()">Setel Alarm</button>
+        </div>
+        <br>
+        <div class="reminder">#SekedarMengingatkan</div>
+        <br>
+        <div class="reminder">3..2..1.. Fokus</div>
+
+    </div>
+    <audio id="alarm-sound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
+    <script>
+        let timerInterval, stopwatchInterval, alarmTimeout;
+
+        function showSection(section) {
+            document.querySelector('.clock').style.display = 'none';
+            document.querySelector('.timer').style.display = 'none';
+            document.querySelector('.stopwatch').style.display = 'none';
+            document.querySelector('.alarm').style.display = 'none';
+            document.getElementById(section).style.display = 'block';
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds}`;
+            
+            document.getElementById('clock').textContent = timeString;
+        }
+
+        function changeBackground() {
+            const colors = [
+                'linear-gradient(135deg, #1b1b1b, #00ff7f)',
+                'linear-gradient(135deg, #0f0f0f, #005f3f)',
+                'linear-gradient(135deg, #202020, #008f5f)',
+                'linear-gradient(135deg, #1b1b1b, #004f2f)'
+            ];
+            const currentBackground = document.body.style.background;
+            let newBackground = colors[Math.floor(Math.random() * colors.length)];
+            
+            while (newBackground === currentBackground) {
+                newBackground = colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            document.body.style.background = newBackground;
+        }
+
+        // Timer functions
+        function startTimer() {
+            const minutes = parseInt(document.getElementById('timer-minutes').value) || 0;
+            const seconds = parseInt(document.getElementById('timer-seconds').value) || 0;
+            let totalTime = minutes * 60 + seconds;
+
+            if (totalTime > 0) {
+                timerInterval = setInterval(() => {
+                    if (totalTime <= 0) {
+                        clearInterval(timerInterval);
+                        document.getElementById('alarm-sound').play();
+                    } else {
+                        totalTime--;
+                        const displayMinutes = String(Math.floor(totalTime / 60)).padStart(2, '0');
+                        const displaySeconds = String(totalTime % 60).padStart(2, '0');
+                        document.getElementById('timer-display').textContent = `${displayMinutes}:${displaySeconds}`;
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('timer-display').textContent = '00:00';
+            document.getElementById('timer-minutes').value = '';
+            document.getElementById('timer-seconds').value = '';
+        }
+
+        // Stopwatch functions
+        let stopwatchTime = 0;
+        function startStopwatch() {
+            stopwatchInterval = setInterval(() => {
+                stopwatchTime++;
+                const hours = String(Math.floor(stopwatchTime / 3600)).padStart(2, '0');
+                const minutes = String(Math.floor((stopwatchTime % 3600) / 60)).padStart(2, '0');
+                const seconds = String(stopwatchTime % 60).padStart(2, '0');
+                document.getElementById('stopwatch-display').textContent = `${hours}:${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopStopwatch() {
+            clearInterval(stopwatchInterval);
+        }
+
+        function resetStopwatch() {
+            clearInterval(stopwatchInterval);
+            stopwatchTime = 0;
+            document.getElementById('stopwatch-display').textContent = '00:00:00';
+        }
+
+        // Alarm functions
+        function setAlarm() {
+            const alarmTime = document.getElementById('alarm-time').value;
+            if (alarmTime) {
+                const alarmDate = new Date();
+                const [hours, minutes] = alarmTime.split(':').map(Number);
+                alarmDate.setHours(hours, minutes, 0, 0);
+
+                const timeToAlarm = alarmDate.getTime() - Date.now();
+                if (timeToAlarm > 0) {
+                    alarmTimeout = setTimeout(() => {
+                        document.getElementById('alarm-sound').play();
+                    }, timeToAlarm);
+                }
+            }
+        }
+
+        // Update the clock every second
+        setInterval(updateClock, 1000);
+
+        // Initial call to display the clock immediately
+        updateClock();
+
+        // Show clock section by default
+        showSection('clock');
+    </script>
+</body>
+</html>
